@@ -1,13 +1,11 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
+import os, time, sys, re
 import requests
-import urllib, re
-import os, time, sys
-
 
 url = 'http://www.reddit.com/r/pics' #enter subreddit url to parse
 custom_folder_name = "" #leave blank for default naming
-pages = 5 #set how many pages to parse
+pages = 1 #set how many pages to parse
 
 driver = webdriver.PhantomJS(executable_path='phantomjs/phantomjs')
 driver.get(url)
@@ -41,8 +39,20 @@ if not os.path.exists(directory): os.mkdir(directory)
 html_source = driver.page_source
 site = BeautifulSoup(html_source)
 
-for x in range(1,pages + 1): 
+# Download function
+def download_file(url, fname):
+    local_filename = fname
+    # NOTE the stream=True parameter
+    r = requests.get(url, stream=True)
+    with open(local_filename, 'wb') as f:
+        for chunk in r.iter_content(chunk_size=1024): 
+            if chunk: # filter out keep-alive new chunks
+                f.write(chunk)
+                f.flush()
+    return local_filename
 
+for x in range(1,pages + 1): 
+	print ('Parsing page %d.' %x)
 	for link in site.find_all("a", {"class": re.compile("thumbnail") }):
 
 		img_url = link.get('href')
@@ -58,9 +68,8 @@ for x in range(1,pages + 1):
 			ext = img_url[img_url.rfind(".") + 1: img_url.rfind(".") + 4]
 
 			file_name = "%s/%d.%s" %(folder_name,ctr,ext)
-			
 			try:
-				urllib.request.urlretrieve(img_url, file_name)
+				download_file(img_url, file_name)
 				size_of_pic = os.path.getsize(file_name)
 				if size_of_pic < 1000: #not an image file
 					os.remove(file_name)
@@ -69,8 +78,8 @@ for x in range(1,pages + 1):
 
 
 				size += int(size_of_pic)
-			except:
-				continue
+			except Exception, e:
+				print "Error occured : %s" %e
 
 			print ("%s -- Page: %d -- Total Size: %d MB" %(img_url, x, round(size / 1024 / 1024, 4)))
 
@@ -98,7 +107,7 @@ for x in range(1,pages + 1):
 				file_name = "%s/A%d-%d.%s" %(folder_name,album,ctr,ext)
 				
 				try:
-					urllib.request.urlretrieve(img_url, file_name )
+					download_file(img_url, file_name )
 					size_of_pic = os.path.getsize(file_name)
 					if size_of_pic < 1000: #not an image file
 						os.remove(file_name)
