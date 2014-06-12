@@ -3,9 +3,11 @@ from bs4 import BeautifulSoup
 import os, time, sys, re
 import requests
 
-url = 'http://www.reddit.com/r/pics' #enter subreddit url to parse
-custom_folder_name = "" #leave blank for default naming
-pages = 1 #set how many pages to parse
+### Config ###
+url = 'http://www.reddit.com/r/pics' # enter subreddit url to parse
+custom_folder_name = "" # leave blank for default naming
+pages = 1 # set how many pages to parse
+### ### ### ###
 
 driver = webdriver.PhantomJS(executable_path='phantomjs/phantomjs')
 driver.get(url)
